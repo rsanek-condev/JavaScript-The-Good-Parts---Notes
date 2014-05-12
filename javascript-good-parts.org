@@ -169,32 +169,23 @@ delete obj.property;
 
 * Chapter 4: Functions
 ** Function Objects
-   - Functions are objects
+   - Functions are objects.
+   - All function objects are linked to Function.prototype, itself linked to Object.prototype.
    - Functions have two hidden properties (in addition to object properties)
      1. Function's context
      2. Code
-   - The prototype of function object is an object whose object.constructor is the function
+   - Each function object is also created with a prototype property, whose value is an object with a constructor property whose value is the function. This is distinct to the Function.prototype.
+   - Functions can be used like any other value: stored in varaibles, objects, arrays, passed as arguments, returned from functions, or even have methods.
 
 ** Function Literal
-   - Function objects are created with function literals
-
-var add = function (a, b) {
-  return a + b;
-}
-
-   - Function literal has four parts
-     1. reserve word *function*
-     2. *Optional* function name. If no name is given then it is an *anonymous* function.
-     3. Set of parameters
-     4. Statements wrapped in the {}
-   - Inner functions are allowed in javascript and they have access to their parent's
-     parameters and variables
+   - Function without names are said to be anonymous.
+   - Inner functions have access to parameters and variables of the functions it is nested within; the function object created by a function literal contains a link to that outer context; this is called *closure*.
 
 ** Invocation
    - In addition to declared parameters, every function receives two additional parameters,
-     *this* and *arguments*.
-   - The value of *this* is extremely important and is determined by its *invocation pattern*
-   - There are four *invocation patterns*
+     *this* and *arguments*, when called. 
+   - The value of *this* is determined by the *invocation pattern*
+   - There are four *invocation patterns*, which differ in how this parameter is initialized.
      - Method invocation
      - function invocation
      - constructor invocation
@@ -204,13 +195,10 @@ var add = function (a, b) {
      - If in the call there are too few parameters then the extra formal parameters will get
        *undefined* value
      - If there are more parameters than formal parameters then the extra ones are ignored.
-     - *No type checking* either
 
 *** Method Invocation Pattern
    - When a function is stored as a property of an object then it is called a *method*.
-   - When a method is invoced *this* will be the *object*
-   - The binding of this to the object happens very late *during invocation*. This makes
-     *this* highly reusable.
+   - When a method is invoked via an object, *this* will be the *object*, which is bound at invocation time (makes using *this* super reusable)
    - Methods which get their context from *this* are called *public methods*
 
 var myObject = {
@@ -228,46 +216,19 @@ document.writeln(myObject.value); // 3
 
 
 *** Function Invocation Pattern
-  - When a function is not a property of an object then it is invoked as a function.
-  - When called like this *this* is bound to the global object.
-  - Because of this *bug* the outer functions can't be employed to use inner functions to
-    change their state.
-  - The following piece of code can serve as an illustration.
-    - Why the *wrong* version is wrong
-      + In the *wrong* version of code, when myObject.double is called, the *this* variable
-	will be reference to the object because of *method invocation pattern*.
-      + The inner function *helper()* wants to access the state of the outer function, the
-	variabe *value*
-      + But when call to *helper* is made *this* will be rebound to the global object.
-    - Why the *right* version is right
-      + Remember that when the inner function is called only the *this* variable is rebound.
-      + In the right version, when a call to myObject.double() is made, the *this* is copied to
-	that and this establishes a lexical scope
-
-
-Wrong:
+  - When a function is not a property of an object then it is invoked as a *function*.
+  - When called like this, *this* is bound to the global object. So outer functions can't be employed to use inner functions since they don't share the same access.
+  - Workaround: 
 myObject = {value : 0};
 
 myObject.double = function () {
-  var helper = function() {
-    this.value += 1;
-  };
-
-  helper();
-}
-
-Right:
-myObject = {value : 0};
-
-myObject.double = function () {
-    that = this;
+    var that = this;
     
     var helper = function() {
-    	that.value += 1;
-	return this.value;
+    	that.value  = add(that.value, that.value);
     };
 
-    return helper();
+    helper();
 };
 
 myObject.double();
