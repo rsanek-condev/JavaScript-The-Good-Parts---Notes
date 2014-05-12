@@ -32,7 +32,7 @@ Always use *//* for comments as /* */ can come in regex.
 ** Numbers
   - Numbers are 64 bit and there is no specific integer type. So 1.0 and 1 are the same.
   - Gives NaN for invalid numeric operations. *NaN == NaN* is *false*.
-    To check if the result is a NaN use *isNnN(number)*
+    To check if the result is a NaN use *isNaN(number)*
 
 
 ** Strings
@@ -68,25 +68,30 @@ Always use *//* for comments as /* */ can come in regex.
   - If a return expression isn't specified, the return value is undefined.
 
 ** Expressions
-  - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence for operator precedence rules
+  - See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence for operator precedence rules. Generally:
+    - . [] () Refinement/invocation
+    - Unary
+    - Mult. Div. Mod
+    - Add Concat Sub
+    - Inequality
+    - Equality
+    - &&
+    - ||
+    - ?:
+  - typeof returns 'number', 'string', 'boolean', 'undefined', 'function', or 'object'
+
 
 ** Literals
-  - Convenien way of specifying new objects.
   - Name of the properties can be specified as *names* or as *strings*
 
-** Functions
-  - They are of the form
-  - function name (parameter-list) {body}
-
-    
 * Chapter 3: Objects
-  - Symple types of js are
-    - numbers
-    - strings
-    - booleans
+  - Simple types of js are
+    - numbers (immutable)
+    - strings (immutable)
+    - booleans (immutable)
     - null
     - undefined
-  - Objects are *mutable keyed collection*
+  - Objects are *mutable keyed collections*
     - keys can be any string *including an empty string*
     - value can be anything *except undefined*
 
@@ -98,17 +103,18 @@ Always use *//* for comments as /* */ can come in regex.
 
 ** Retrieval
   - If the key name is a constant and a legal javascript name then the property can be
-    accessed as *obj.property*.
+    accessed as *obj.property* (preferred method).
   - Otherwise property can be accessed as *obj["property"]*.
   - For nonexistent member an obj["non-existent-property"] returns *undefined*
-  - Accessing properties of 'undefined' results in *TypeError* exception.
-
-** Update
-  - Updation of existing keys and appending new keys/values happen through assignment
-    - obj["property"] = new-value;
+  - Use || for filling in default values: 
+    - var status = flight.status || "unknown";
+  - Accessing properties of 'undefined' results in *TypeError* exception. Avoid by using &&:
+    - flight. equipment //undefined
+    - flight.equipment.model //throws TypeError
+    - flight.equipment && flight.equipment.model //undefined
 
 ** Reference
-  - Objects are passed around by reference.
+  - Objects are passed around by reference, never copied.
 
 ** Prototype
   - Every object is linked to a prototype object from which it inherits its properties
@@ -127,16 +133,13 @@ if(typeof Object.create != 'function') // check if Object.create already doesn't
 
 var another_stooge = Object.create(stooge);
 
-  - prototype link has *no effect on updating*.
-  - While retrieval if the object does not have a selected property then its prototype will be
-    referred. And if the prototype lacks the property then it will traverse further in the
-    chain. This is called *delegation*
+  - *Delegation:* when an attempt is made to retrieve a property value & the object lacks the property, JS will attempt to retrieve the property from the prototype object(s) in the chain.
   - Prototype relationship is dynamic. If a prototype gets a new property then all the objects
     based on that prototype will get the property.
 
 ** Reflection
   - Reflection is done primarily with typeof operator.
-  - Since during reflection we only care about data and not functions ignore 'function'
+  - Since during reflection we only care about data and not functions; ignore 'function'
   - typeof obj.unknown_property will be *undefined*
   - if the object does not have a property and its prototype has that property even then typeof
     will return correct value
@@ -144,25 +147,11 @@ var another_stooge = Object.create(stooge);
     return false
 
 ** Enumeration
-  - for(name in obj) {} will enumerate through all the properties of an object
+  - for(prop in obj) {} will enumerate through all the properties of an object
     *including functions and prototype properties*.
-
-var name;
-for (name in another_stooge) {
-  if (typeof another_stooge[name] !== 'function') {
-    document.writeln(name + ': ' + another_stooge[name]);
-  }
-}
-
+  - Use typeof obj.[prop] !== 'function' and obj.hasOwnProperty(prop) to filter, if desired
   - for-in syntax does not guarantee order of traversal of properties. If ordering is important
-    then
-
-var i;
-var properties = ['first-name', 'middle-name', 'last-name', 'profession'];
-for (i = 0; i < properties.length; i += 1) {
-  document.writeln(properties[i] + ": " +
-             another_stooge[properties[i]]);
-}
+    then make an array with properties in your order and traverse that.
 
 ** Delete
   - Used to remove a property from an object.
@@ -175,6 +164,7 @@ delete obj.property;
 ** Global Abatement
   - Since it is not advisable to use globals it is advisable to reduce global footprint by creating
     a master object, say MYAPP and putting all the variables you need inside.
+  - Why?: Reduces bad interactions with other js files, program becomes easier to read.
     
 
 * Chapter 4: Functions
