@@ -68,7 +68,7 @@ Always use *//* for comments as /* */ can come in regex.
   - If a return expression isn't specified, the return value is undefined.
 
 ** Expressions
-Nothing new here. Look at the book for precedence table.
+  - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence for operator precedence rules
 
 ** Literals
   - Convenien way of specifying new objects.
