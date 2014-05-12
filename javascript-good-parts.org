@@ -65,6 +65,7 @@ Always use *//* for comments as /* */ can come in regex.
   - *throw* throws an exception object which has the following properties
     - has *name* property
     - has *message* property
+  - If a return expression isn't specified, the return value is undefined.
 
 ** Expressions
 Nothing new here. Look at the book for precedence table.
