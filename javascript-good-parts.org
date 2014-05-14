@@ -419,3 +419,32 @@ String.method('deentityify', function () {
 #+END_SRC
 Usage: document.writeln('&lt;%gt;').deentityify());   // <>
 
+** Curry
+  - Currying allows us to produce a new function by combining a function and an argument
+
+** Memoization
+  - Optimizing functions by saving previous work
+Ex. create a general memoizer function with parameters initial memo array and formula function. Returns recur function that manages the memo store and calls the formula function as needed.
+#+BEGIN_SRC js
+var memoizer = function (memo, formula) {
+  var recur = function(n) {
+     var result = memo[n];
+     if (typeof result !== 'number') {
+        result = formula(recur, n);
+        memo[n] = result;
+     }
+     return result;
+  };
+  return recur;
+}
+
+var fibonacci = memoizer([0, 1], function(recur, n) {
+  return recur(n-1) + recur(n-2);
+});
+
+var factorial = memoizer([1, 1], function(recur, n) {
+  return n * recur(n-1);
+});
+#+END_SRC
+
+** Inheritance
