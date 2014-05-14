@@ -236,10 +236,7 @@ myObject.double();
 *** Constructor Invocation Pattern
   - Javascript is a prototypal language. It is class free. Objects inherit properties
     directly from other objects.
-  - Javascript, to blur its nature of prototype based language gave a *clumsy* way
-    of creating new objects.
-  - If a function is called with a *new* prefix then a new object is created with
-    its prototype being the same as the function's prototype.
+  - If a function is invoked with *new*, a new object will be created with a hidden link to the value of the function's prototype member, and *th8s* will be bound to that new object.
   - *new* operator also changes the behavior of *return*.
   - Functions intended to be used to create objects are called *constructors*.
   - They should not be called without a *new* operator.
@@ -259,18 +256,17 @@ var Quo = function(string) {
     this.status = string;
 };
 
+//all instances of Quo will have this public method
 Quo.prototype.get_status = function() {
     return this.status;
 };
 
 var myQuo = new Quo("confused");
-document.writeln(myQuo.get_status());
+document.writeln(myQuo.get_status()); //confused
 
 *** Apply Invocation Pattern
-  - apply method allows us to construct an argument array and apply a function to
-    that array.
+  - *apply* method: constructs an array of arguments to use to invoke a function
   - It also allows us to explicity set the value of *this* as the first argument.
-  - It also allows a form of *duck typing* with apply
 
 Eg. how to *apply* a function
 var array = [3, 4];
@@ -282,13 +278,11 @@ var statusObject = {status : 'OK'};
 var status = Quo.prototype.get_status.apply(statusObject); // returns OK
 
 ** Arguments
-   - A bonus *arguments* array(like) object is passed to functions while invocation.
+   - A bonus *arguments* array-like object is passed to functions while invocation.
    - *arguments* contains the full arguments list. It is useful for passing unspecified
      number of arguments.
-   - Because of a *design error* *arguments is not a array*. It is an array like object.
-     arguments has a *length* property but lacks other array methods.
-Eg.
 
+Eg.
 var sum = function () {
   var i, sum = 0;
   for (i = 0; i < arguments.length; i += 1) {
@@ -305,7 +299,6 @@ var sum = function () {
   - Exception objects should have *name* and *message* properties.
   - You can add any extra properties you like.
   - Since there is no class types, the try block will have only one catch block.
-  - We can switch based on *name* of the exception within the catch block.
 
 Eg.
 try {
@@ -315,197 +308,96 @@ try {
 }
 
 ** Augmenting Types
-  - JS allows types to be *augmented*, similar to monkeypatching in Ruby
-  - To provide a new method to all objects, including those already created
-    add a new method to Object.prototype.
-  - Methods augmented to Function.prototype will be available to all functions.
-  - In the following example we add a method 'method' to Function.prototype
-  - Since 'method' will be visible to all functions we add new mehods to
-    the *function* Number called 'integer'.
-
-Eg. This augments 'method' method to Functions.prototype
+  - JS allows types to be *augmented*. Adding methods to any prototype makes that method available to all things of that type.
+Ex.
 Function.prototype.method = function (name, func) {
   this.prototype[name] = func;
+  return this;
 }
-
-Number.method('integer', function () {
-  return Math[this < 0 ? 'ceiling' : 'floor'](this);
-}
-
-document.writeln((-10/3).integer()); //returns 3
-
-NOTE1: Prototypes are common to the entire JS. So before *monkey-patching*
-make sure such a method does not already exist
-NOTE2: 'for' interacts badly with prototypes. So use hasOwnProperty
+Ex.2
+Number.method('integer', function() {
+  return Math[this < 0 ? 'ceil' : 'floor'](this);
+});
+document.writeln((-10/3).integer());  //-3
 
 ** Recursion
-  - Since the functions are all anonymous capture the function name in a binding
-    and use it for recursion as follows.
-  - There is *no Tail Call Optimization* in JS
-
-var functionName = function () {
-  //some stuff
-  functionName();
-}
+  - JS does not provide tail recursion optimization; functions can exhaust the return stack.
 
 ** Scope
-  - *No block scope; only function scope*
-  - Best to declare all the variables right at the top.
-  - Local variables should be declared as var
-
-Eg. 
-var foo = function () {
-  var a = 3, b = 5;
-
-  var bar = function () { //local function
-    var b = 7, c = 11;
-
-    // (a, b, c) = (3, 7, 11);
-    a += b + c;
-    
-    // (a, b, c) = (21, 7, 11);
-  };
-
-  // (a, b, c) = (3, 5, undefined)
-
-  bar();
-  
-  // (a, b, c) = (21, 5, undefined)
-};
+  - JS has function scope. Parameters & variables defined in a function are not visible outside of the function; a variable defined *anywhere* within a function is visible everywhere within the function.
+  - Declare all function variables at the top of a function.
 
 ** Closure
-  - Inner functions have access to outer functions variables, the actual ones
-    not any copy.
-  - If a function has multiple inner functions then the variable is shared
-    across all the functions.
-  - If the inner function is returned as the result of computation by
-    the outer function then all the bindings (of the outer function) are
-    retained.
-
-Example:
-var myObject = function () {
+  - Inner functions get access to the parameters & variables of the functions they are defined withing (except for this & arguments).
+  - What if an inner function has a longer lifetime than its outer function? No problem, the inner functions retain access to the value.
+  - a function has access to the context in which it was created.
+Ex.
+var myObject = (function() {
   var value = 0;
-
   return {
-    increment: function (inc) {
-      value += typeof inc == 'number' ? inc : 1;
+    increment: function(inc) {
+      value += typeof inc === 'number' ? inc : 1;
     },
-
-    getVlaue: function () {
+    getValue: function() {
       return value;
     }
   };
-}();  // the outer function is being called
+}());
 
-  - It is very important to understand that all the inner functions share
-    the variable and do not have a copy of their own
-  - The following examples we are trying to assign integers incrementally to
-    *nodes* and when they are clicked, we have to display the integer.
-    - Why the *bad example* is bad
-      + The binding for 'i' is established by the outer function and is shared
-	by the outer function and all the inner functions.
-      + We iterate over nodes *modifying* i and creating functions.
-      + Since all the functions have the shared version of 'i' which finally
-	gets set to the length of nodes, that is what get displayed when
-	any node gets clicked
-    - Why the *correct example* is correct
-      + The typical *let over lambda* approach: We create a new function wrapper
-	around each of the inner functions and establish a new binding.
+Ex.2 (creating a 'private' variable)
+var quo = function (status) {
+  return {
+    get_status: function() {
+      return status;
+    }
+  }
+}
 
-Eg. Bad example
-
+  - Do not create functions within a loop: it can be inefficient and can cause confusion. 
+//WRONG: all functions are bound to i, not i at the time the function is made
 var add_the_handlers = function (nodes) {
   var i;
-  for (i = 0; i < nodes.length; i += 1) {
-    nodes[i].onclick = function (e) {
+  for (i = 0; i < nodes.length; i+= 1) {
+    nodes[i].onclick = function(e) {
       alert(i);
     };
   }
 };
 
-Eg. Correct Example
-
-var add_the_handlers = function (nodes) {
-  var i;
-  for (i = 0; i < nodes.length; i+= 1) {
-    nodes[i].onclick = function (i) {
-      function (e) {
-        alert(i);
-      }
-    }(i);
+//RIGHT
+var add_the_handlers = function(nodes) {
+  var helper = function(i) {
+    return function(e) {
+      alert(i);
+    };
   };
-}
+  var i;
+  for (i = 0; i < nodes.length; i += 1) {
+    nodes[i].onclick = helper(i);
+  }
+};
 
-** Callbacks
-  - It is generally useful not to make synchronous calls if it is going to freeze
-    the browser.
-  - Create a function and set it as a callback event.
-
-** Modules
-  - Modules can be simulated with closures
-  - Suppose we want to have a 'deentityfy' function which will remove html entities
-    and replace them with the actual ones (see the example)
-  - The following example associates a closure to String.modify. The lexical binding
-    of the closure includes 'entity'
-
-Eg.
-
-String.method('deentityfy', function() { // *method* method was add to Function.prototype
+** Module
+  - module - a function or object that presents an interface but that hides its state and implementation.
+  - general module pattern: function that defines private variables & functions; creates privileged functions which (through closure) will have access to the private variables & functions; returns privileged functions/stores them in an accessible place.
+Ex. Converting HTML entities to real representations by adding a deentityify method to String:
+//only the deentityify method has access to the entity data structure
+String.method('deentityify', function () {
   var entity = {
-    quot: '"',
-    lt:   '<',
-    gt:   '>'
+     lt: '<',
+     gt: '>'
   };
 
   return function() {
-    return this.replace(/&([^&;]+);/g, function() (a, b) {
-      var r = entity[b];
-      return typeof r === 'string' ? r : a;
-    });
-  }
-}());  
-
-** Cascade
-  - If there is no useful return value for a function (because it is called for its
-    side effects) it is always better to return so that it will be easy to *chain*
-    calls.
-
-** Curry
-  - Currying :: Create a new function from an existing function by supplying only a few
-		arguments
-  - Note that the *arguments* object we get in a function call is *not an array*.
-    This *design flaw* manifests currying currying because arguments will not have
-    array methods
-  - This example will use Array.prototype.slice as a workaround.
-  - In the following example we add a new method to Function.prototype called 'curry'
-
-Eg.
-Function.method('curry', function () {
-  var slice = Array.prototype.slice,  //
-      args  = slice.apply(arguments),
-      that  = this;
-
-  return function () {
-    return that.apply(null, args.concat(slice.apply(arguments)));
+     return this.replace(/&([^&;]+);/g, //looking for strings starting with &, ending with ;
+        function(a, b) {          //a = matched substring; b = 1st parenthesized submatch string
+           var r = entity[b];     //find the replacement in the entity array
+           //make sure the entity was actually found in the array. If so, return that; if not, return the unchanged match.
+           return typeof r === 'string' ? r : a;
+        }
+    );
   };
-});
+}());
 
-** Memoization
-  - Memoization :: Saving return values of a function call and using it later.
-  - In general memoization can be done by using function objects.
+Usage: document.writeln('&lt;%gt;').deentityify());   // <>
 
-var functionObj = function () {
-  var memoizedValues = []; // Some hash otherwise.
-  return memoizedFunction () {
-    var retVal;
-    if (memoizedValues does not have an entry for this bunch of args) {
-      retVal = compute_value();
-      //add an entry to memoizedValues;
-      return retVal;
-    }
-  };
-}();
-
-
-* Chapter 5: Inheritance
-  - JS is a prototypal language so inheritance happens through objects prototypes.
