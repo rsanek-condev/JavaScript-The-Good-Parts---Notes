@@ -447,4 +447,44 @@ var factorial = memoizer([1, 1], function(recur, n) {
 });
 #+END_SRC
 
-** Inheritance
+* Inheritance
+  - Since JS is loosely typed, there are no casts, and the lineage of an object is irrelevant. The only thing that matters is what an object can do, not what it is descended from.
+  - JS supports a richer set of code reuse patterns than classical languages.
+  - JS is prototypal, so objects inherit directly from other objects.
+** Pseudoclassical
+  - When a function object is created, the Function constructor that produces the function object runs code similar to this.prototype = {constructor:this};
+  - The new function object is given a prototype property whose value is an object containing a constructor property whose value is the new function object.
+  - The prototype object is where inherited traits are deposited. 
+  - Every function has a prototype object, but the constructor property is not useful.
+  - If a function is invoked with the constructor invocation pattern using the new prefix, this modifies the way in which the function is executed.
+  - Bottom line, it doesn't make sense to use classical patterns with JS. *Always use an initial capital with constructor function names* and don't use an initial capital for anything else.
+  - Best possible solution is *not to use new at all*.
+
+** Object Specifiers
+  - It can be easier to write constructures to accept a single object specifier instead of a list of arguments.
+Ex.
+var myObject = maker(f, l, m);
+//vs.
+var myObject = maker({
+    first:f,
+    last: l,
+    middle:m
+});
+
+** Prototypal
+    - Prototypal pattern: ignore classes altogether and focus on objects. A new object inherits the properties of an old object.
+    - differential inheritance - customizing a new object, specifying the differences from the base object.
+Ex.
+
+var myMammal = {
+    name: 'Herb the Mammal',
+    get_name: function() {
+        return this.name;
+    }
+};
+var myCat = Object.create(myMammal); //using create from Chpt.3
+myCat.name = 'rob';
+
+** Functional
+    - Weakness of above patterns: no privacy (all properties are visible)
+    - 
