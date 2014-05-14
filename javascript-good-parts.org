@@ -381,6 +381,7 @@ var add_the_handlers = function(nodes) {
   - module - a function or object that presents an interface but that hides its state and implementation.
   - general module pattern: function that defines private variables & functions; creates privileged functions which (through closure) will have access to the private variables & functions; returns privileged functions/stores them in an accessible place.
 Ex. Converting HTML entities to real representations by adding a deentityify method to String:
+#+BEGIN_SRC
 //only the deentityify method has access to the entity data structure
 String.method('deentityify', function () {
   var entity = {
@@ -398,6 +399,6 @@ String.method('deentityify', function () {
     );
   };
 }());
-
+#+END_SRC
 Usage: document.writeln('&lt;%gt;').deentityify());   // <>
 
