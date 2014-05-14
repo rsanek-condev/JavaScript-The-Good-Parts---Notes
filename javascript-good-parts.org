@@ -19,12 +19,12 @@ So all the globals are put inside the common *global object* namespace because
 there is *no linker*. Unfortunately in js globals are fundamental.
 
 Throughout the book a *method* method is used to define new methods.
-
+#+BEGIN_SRC js
 Function.prototype.method = function (name, func) {
   this.prototype[name] = func;
   return this;
 }
-
+#+END_SRC
 
 * Chapter 2: Grammar
 Always use *//* for comments as /* */ can come in regex.
@@ -122,6 +122,7 @@ Always use *//* for comments as /* */ can come in regex.
   - The syntax to specify an object's prototype is messy. This can be simplified by adding
     a *create* function to *Object*
 
+#+BEGIN_SRC js
 if(typeof Object.create != 'function') // check if Object.create already doesn't exist
 {
   Object.create = function (proto) {
@@ -132,7 +133,7 @@ if(typeof Object.create != 'function') // check if Object.create already doesn't
 }
 
 var another_stooge = Object.create(stooge);
-
+#+END_SRC
   - *Delegation:* when an attempt is made to retrieve a property value & the object lacks the property, JS will attempt to retrieve the property from the prototype object(s) in the chain.
   - Prototype relationship is dynamic. If a prototype gets a new property then all the objects
     based on that prototype will get the property.
@@ -159,8 +160,9 @@ var another_stooge = Object.create(stooge);
     will be visible from then on.
   - delete does not touch the prototype chain
 
+#+BEGIN_SRC js
 delete obj.property;
-
+#+END_SRC
 ** Global Abatement
   - Since it is not advisable to use globals it is advisable to reduce global footprint by creating
     a master object, say MYAPP and putting all the variables you need inside.
@@ -201,6 +203,7 @@ delete obj.property;
    - When a method is invoked via an object, *this* will be the *object*, which is bound at invocation time (makes using *this* super reusable)
    - Methods which get their context from *this* are called *public methods*
 
+#+BEGIN_SRC js
 var myObject = {
    value: 0,
    increment: function(inc) {
@@ -213,12 +216,14 @@ document.writeln(myObject.value); // 1
 
 myObject.increment(2);
 document.writeln(myObject.value); // 3
-
+#+END_SRC
 
 *** Function Invocation Pattern
   - When a function is not a property of an object then it is invoked as a *function*.
   - When called like this, *this* is bound to the global object. So outer functions can't be employed to use inner functions since they don't share the same access.
   - Workaround: 
+
+#+BEGIN_SRC js
 myObject = {value : 0};
 
 myObject.double = function () {
@@ -232,7 +237,7 @@ myObject.double = function () {
 };
 
 myObject.double();
-
+#+END_SRC
 *** Constructor Invocation Pattern
   - Javascript is a prototypal language. It is class free. Objects inherit properties
     directly from other objects.
@@ -245,13 +250,14 @@ myObject.double();
     will be shown in the next chapter.
 
 Eg. How to assign prototype
-
+#+BEGIN_SRC js
 var myConstructor = function () {};
 myConstructor.prototype = some_object;
 var newObject = new myConstructor(); // newObject's prototype will be some_object
-
+#+END_SRC
 
 Example. The value of *this*
+#+BEGIN_SRC js
 var Quo = function(string) {
     this.status = string;
 };
@@ -263,33 +269,36 @@ Quo.prototype.get_status = function() {
 
 var myQuo = new Quo("confused");
 document.writeln(myQuo.get_status()); //confused
-
+#+END_SRC
 *** Apply Invocation Pattern
   - *apply* method: constructs an array of arguments to use to invoke a function
   - It also allows us to explicity set the value of *this* as the first argument.
 
 Eg. how to *apply* a function
+#+BEGIN_SRC js
 var array = [3, 4];
 var sum = add.apply(null, array); //returns 7;
-
+#+END_SRC
 Eg. Ducktyping with apply
+#+BEGIN_SRC js
 //For the definition of Quo look at the previous section
 var statusObject = {status : 'OK'};
 var status = Quo.prototype.get_status.apply(statusObject); // returns OK
-
+#+END_SRC
 ** Arguments
    - A bonus *arguments* array-like object is passed to functions while invocation.
    - *arguments* contains the full arguments list. It is useful for passing unspecified
      number of arguments.
 
 Eg.
+#+BEGIN_SRC js
 var sum = function () {
   var i, sum = 0;
   for (i = 0; i < arguments.length; i += 1) {
     sum += arguments[i];
   }
 };
-
+#+END_SRC
 ** Return
   - Functions always return a value. If no return statement is given the value
     *undefined* is returned
@@ -301,25 +310,29 @@ var sum = function () {
   - Since there is no class types, the try block will have only one catch block.
 
 Eg.
+#+BEGIN_SRC js
 try {
   throw { name : "MyExcpetion", message : "This is my exception"};
 } catch (e) {
   document.writeln(e.name + ": " + e.message);
 }
-
+#+END_SRC
 ** Augmenting Types
   - JS allows types to be *augmented*. Adding methods to any prototype makes that method available to all things of that type.
 Ex.
+#+BEGIN_SRC js
 Function.prototype.method = function (name, func) {
   this.prototype[name] = func;
   return this;
 }
+#+END_SRC
 Ex.2
+#+BEGIN_SRC js
 Number.method('integer', function() {
   return Math[this < 0 ? 'ceil' : 'floor'](this);
 });
 document.writeln((-10/3).integer());  //-3
-
+#+END_SRC
 ** Recursion
   - JS does not provide tail recursion optimization; functions can exhaust the return stack.
 
@@ -332,6 +345,7 @@ document.writeln((-10/3).integer());  //-3
   - What if an inner function has a longer lifetime than its outer function? No problem, the inner functions retain access to the value.
   - a function has access to the context in which it was created.
 Ex.
+#+BEGIN_SRC js
 var myObject = (function() {
   var value = 0;
   return {
@@ -343,8 +357,9 @@ var myObject = (function() {
     }
   };
 }());
-
+#+END_SRC
 Ex.2 (creating a 'private' variable)
+#+BEGIN_SRC js
 var quo = function (status) {
   return {
     get_status: function() {
@@ -352,8 +367,9 @@ var quo = function (status) {
     }
   }
 }
-
+#+END_SRC
   - Do not create functions within a loop: it can be inefficient and can cause confusion. 
+#+BEGIN_SRC js
 //WRONG: all functions are bound to i, not i at the time the function is made
 var add_the_handlers = function (nodes) {
   var i;
@@ -376,7 +392,7 @@ var add_the_handlers = function(nodes) {
     nodes[i].onclick = helper(i);
   }
 };
-
+#+END_SRC
 ** Module
   - module - a function or object that presents an interface but that hides its state and implementation.
   - general module pattern: function that defines private variables & functions; creates privileged functions which (through closure) will have access to the private variables & functions; returns privileged functions/stores them in an accessible place.
